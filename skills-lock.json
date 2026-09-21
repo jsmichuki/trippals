@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "skills": {
+    "api-security-testing": {
+      "source": "usestrix/strix",
+      "sourceType": "github",
+      "skillPath": "skills/api-security-testing/SKILL.md",
+      "computedHash": "4baa317508f5e01e72a0c292d3c9ea6a71249cfa3414971e97aa6e0fabae25f5"
+    },
+    "elixir": {
+      "source": "mindrally/skills",
+      "sourceType": "github",
+      "skillPath": "elixir/SKILL.md",
+      "computedHash": "b8f9a58fc110ab05a805a1c4a82d3aeddaa8a739acee267bf0b7ec6f75002e8b"
+    },
+    "kotlin-multiplatform": {
+      "source": "vitorpamplona/amethyst",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/kotlin-multiplatform/SKILL.md",
+      "computedHash": "d34cd8b7e818c149e6c93d3b7522473c258450f769ef8de97bffb3067ba89dda"
+    },
+    "phoenix-api-channels": {
+      "source": "bobmatnyc/claude-mpm-skills",
+      "sourceType": "github",
+      "skillPath": "toolchains/elixir/frameworks/phoenix-api-channels/SKILL.md",
+      "computedHash": "3b981c0907419a4eb14ffd52c4a01846140e65ebde3db611798dcf3320a26acd"
+    },
+    "postgresql-optimization": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/postgresql-optimization/SKILL.md",
+      "computedHash": "8022448de70ba9a485e3b5bce34c5bbc644f93eb39b68431c9f7dabcf03aeb09"
+    },
+    "rest-api-design": {
+      "source": "aj-geddes/useful-ai-prompts",
+      "sourceType": "github",
+      "skillPath": "skills/rest-api-design/SKILL.md",
+      "computedHash": "e249c58df5d9d59407fc4de70b0d75bb336d917bbe0a75695d6ec8cf13cfaf35"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
+      "computedHash": "4080ff883b26b670a5a224fb332e89ecc15319535f4d14279947ad7812fec558"
+    }
+  }
+}

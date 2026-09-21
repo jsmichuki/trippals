@@ -1,0 +1,117 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "TripPals API",
+    "version": "1.0.0",
+    "description": "Versioned public API contract. Product resource endpoints are added only with their authorization-specific schemas and contract tests."
+  },
+  "paths": {
+    "/up": {
+      "get": {
+        "operationId": "healthCheck",
+        "responses": {
+          "200": {"description": "Service process is healthy", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Success"}}}}
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "operationId": "readinessCheck",
+        "responses": {
+          "200": {"description": "Required local dependencies are ready", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Success"}}}},
+          "503": {"description": "A required dependency is unavailable", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}}
+        }
+      }
+    },
+    "/v1/hello": {
+      "get": {
+        "operationId": "apiHello",
+        "responses": {
+          "200": {"description": "API reachability response", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Success"}}}}
+        }
+      }
+    },
+    "/v1/cities": {
+      "get": {
+        "operationId": "listCities",
+        "responses": {
+          "200": {"description": "Supported and unavailable city metadata", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Success"}}}}
+        }
+      }
+    },
+    "/v1/activities": {
+      "get": {
+        "operationId": "listActivities",
+        "parameters": [
+          {"name": "city_id", "in": "query", "required": true, "schema": {"type": "string", "format": "uuid"}},
+          {"name": "start_local_date", "in": "query", "schema": {"type": "string", "format": "date"}},
+          {"name": "end_local_date", "in": "query", "schema": {"type": "string", "format": "date"}},
+          {"name": "category", "in": "query", "schema": {"type": "string"}},
+          {"name": "min_capacity", "in": "query", "schema": {"type": "integer", "minimum": 2, "maximum": 10}},
+          {"name": "max_capacity", "in": "query", "schema": {"type": "integer", "minimum": 2, "maximum": 10}},
+          {"name": "cursor", "in": "query", "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {"description": "Guest-safe scheduled activities", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Success"}}}},
+          "404": {"description": "City not found", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}},
+          "422": {"description": "Invalid range or unavailable city", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}}
+        }
+      }
+    },
+    "/v1/activities/{id}": {
+      "get": {
+        "operationId": "getActivity",
+        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}}],
+        "responses": {
+          "200": {"description": "Guest-safe activity detail", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Success"}}}},
+          "404": {"description": "Activity not found", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}},
+          "410": {"description": "Activity is no longer publicly available", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}}
+        }
+      }
+    },
+    "/v1/activity-ideas": {
+      "get": {
+        "operationId": "listActivityIdeas",
+        "responses": {
+          "200": {"description": "Non-joinable activity templates", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Success"}}}}
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Success": {
+        "type": "object",
+        "required": ["data", "meta"],
+        "properties": {
+          "data": {"type": "object"},
+          "meta": {"$ref": "#/components/schemas/Meta"}
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error", "meta"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": ["code", "message"],
+            "properties": {
+              "code": {"type": "string"},
+              "message": {"type": "string"},
+              "fields": {"type": "object"},
+              "current": {"type": "object"}
+            }
+          },
+          "meta": {"$ref": "#/components/schemas/Meta"}
+        }
+      },
+      "Meta": {
+        "type": "object",
+        "required": ["correlation_id"],
+        "properties": {
+          "correlation_id": {"type": ["string", "null"]}
+        }
+      }
+    }
+  }
+}

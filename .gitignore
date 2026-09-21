@@ -1,0 +1,28 @@
+# Local environment and editor state
+.env
+.env.*
+!.env.example
+.DS_Store
+.idea/
+.vscode/
+
+# Phoenix / Elixir
+apps/api/service/_build/
+apps/api/service/deps/
+apps/api/service/cover/
+apps/api/service/.elixir_ls/
+apps/api/service/erl_crash.dump
+
+# Kotlin / Android / iOS
+apps/mobile/.gradle/
+apps/mobile/**/build/
+apps/mobile/**/.kotlin/
+apps/mobile/androidApp/local.properties
+apps/mobile/iosApp/Pods/
+apps/mobile/iosApp/DerivedData/
+apps/mobile/iosApp/*.xcuserstate
+
+# Test and operational output
+tmp/
+coverage/
+*.log

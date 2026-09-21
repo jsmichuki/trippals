@@ -1,0 +1,55 @@
+name: trippals
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?copy .env.example to .env and set POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:?copy .env.example to .env and set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?copy .env.example to .env and set POSTGRES_PASSWORD}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    networks:
+      - backend
+
+  api:
+    profiles: ["api", "tooling"]
+    build:
+      context: ./apps/api
+      target: development
+    working_dir: /workspace/service
+    command: mix phx.server
+    environment:
+      MIX_ENV: dev
+      DATABASE_URL: ${DATABASE_URL:?copy .env.example to .env and set DATABASE_URL}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:?copy .env.example to .env and set SECRET_KEY_BASE}
+      PHX_HOST: localhost
+      PORT: "4000"
+    ports:
+      - "127.0.0.1:${API_PORT:-4000}:4000"
+    volumes:
+      - ./apps/api:/workspace
+      - api_build:/workspace/service/_build
+      - api_deps:/workspace/service/deps
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend
+
+volumes:
+  postgres_data:
+  api_build:
+  api_deps:
+
+networks:
+  backend:
+    driver: bridge
