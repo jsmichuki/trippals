@@ -2,6 +2,13 @@
 
 .PHONY: help bootstrap-api setup-api up down test-api format-api
 
+ENV_FILE ?= .env
+
+define load_api_env
+test -f "$(ENV_FILE)" || { printf '%s\n' "Missing $(ENV_FILE); copy .env.example to .env first."; exit 1; }; \
+set -a; . "$(ENV_FILE)"; set +a;
+endef
+
 help:
 	@printf '%s\n' \
 	  'make bootstrap-api  Fetch Phoenix dependencies (or generate the API if absent)' \
@@ -12,7 +19,8 @@ help:
 	  'make format-api     Format Phoenix code'
 
 bootstrap-api:
-	@if [ -d apps/api/service ]; then \
+	@$(load_api_env) \
+	if [ -d apps/api/service ]; then \
 		cd apps/api/service && mix deps.get; \
 	else \
 		cd apps/api && mix archive.install hex phx_new --force && \
@@ -21,17 +29,17 @@ bootstrap-api:
 	fi
 
 setup-api:
-	@set -a; . ./.env; set +a; cd apps/api/service && mix ecto.create && mix ecto.migrate
-	@set -a; . ./.env; set +a; cd apps/api/service && MIX_ENV=test mix ecto.create && MIX_ENV=test mix ecto.migrate
+	@$(load_api_env) cd apps/api/service && mix ecto.create && mix ecto.migrate
+	@$(load_api_env) cd apps/api/service && MIX_ENV=test mix ecto.create && MIX_ENV=test mix ecto.migrate
 
 up:
-	@set -a; . ./.env; set +a; cd apps/api/service && mix phx.server
+	@$(load_api_env) cd apps/api/service && mix phx.server
 
 down:
 	brew services stop postgresql@14
 
 test-api:
-	@set -a; . ./.env; set +a; cd apps/api/service && MIX_ENV=test mix test
+	@$(load_api_env) cd apps/api/service && MIX_ENV=test mix test
 
 format-api:
-	@set -a; . ./.env; set +a; cd apps/api/service && mix format
+	@$(load_api_env) cd apps/api/service && mix format

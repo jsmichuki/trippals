@@ -1,0 +1,56 @@
+-- Initial cache migration. Keep this expand-only: future versions add a new
+-- numbered .sqm file and retain an adapter path until old installs have moved.
+CREATE TABLE browse_preference (
+  preference_key TEXT NOT NULL PRIMARY KEY, selected_city_id TEXT,
+  start_local_date TEXT, end_local_date TEXT, category_filters_json TEXT NOT NULL,
+  fetched_at_epoch_ms INTEGER NOT NULL, expires_at_epoch_ms INTEGER, access_scope_key TEXT NOT NULL
+);
+CREATE TABLE cache_metadata (
+  resource_type TEXT NOT NULL, resource_key TEXT NOT NULL, access_scope_key TEXT NOT NULL,
+  fetched_at_epoch_ms INTEGER NOT NULL, expires_at_epoch_ms INTEGER, server_version TEXT,
+  server_cursor TEXT, PRIMARY KEY (resource_type, resource_key, access_scope_key)
+);
+CREATE TABLE activity_preview_cache (
+  activity_id TEXT NOT NULL PRIMARY KEY, city_id TEXT NOT NULL, title TEXT NOT NULL,
+  category TEXT NOT NULL, start_at_utc TEXT NOT NULL, end_at_utc TEXT NOT NULL,
+  iana_timezone TEXT NOT NULL, status TEXT NOT NULL, access_scope_key TEXT NOT NULL
+);
+CREATE INDEX activity_preview_city_idx ON activity_preview_cache(city_id, access_scope_key, start_at_utc);
+CREATE TABLE activity_idea_cache (
+  idea_id TEXT NOT NULL PRIMARY KEY, city_id TEXT NOT NULL, title TEXT NOT NULL,
+  category TEXT NOT NULL, description TEXT NOT NULL, access_scope_key TEXT NOT NULL
+);
+CREATE INDEX activity_idea_city_idx ON activity_idea_cache(city_id, access_scope_key);
+CREATE TABLE plan_summary_cache (
+  activity_id TEXT NOT NULL, access_scope_key TEXT NOT NULL, section TEXT NOT NULL,
+  title TEXT NOT NULL, status TEXT NOT NULL, start_at_utc TEXT, iana_timezone TEXT,
+  PRIMARY KEY (activity_id, access_scope_key)
+);
+CREATE TABLE invitation_summary_cache (
+  invitation_id TEXT NOT NULL, access_scope_key TEXT NOT NULL, activity_id TEXT NOT NULL,
+  status TEXT NOT NULL, expires_at_utc TEXT, PRIMARY KEY (invitation_id, access_scope_key)
+);
+CREATE TABLE pinned_logistics_cache (
+  activity_id TEXT NOT NULL, access_scope_key TEXT NOT NULL, payload_ciphertext BLOB NOT NULL,
+  key_reference TEXT NOT NULL, PRIMARY KEY (activity_id, access_scope_key)
+);
+CREATE TABLE recent_message_cache (
+  message_id TEXT NOT NULL, conversation_id TEXT NOT NULL, activity_id TEXT NOT NULL,
+  access_scope_key TEXT NOT NULL, sender_id TEXT, sequence INTEGER NOT NULL,
+  created_at_utc TEXT NOT NULL, body_ciphertext BLOB NOT NULL, key_reference TEXT NOT NULL,
+  PRIMARY KEY (message_id, access_scope_key)
+);
+CREATE INDEX recent_message_conversation_idx ON recent_message_cache(conversation_id, access_scope_key, sequence);
+CREATE TABLE notification_cache (
+  notification_id TEXT NOT NULL, access_scope_key TEXT NOT NULL, kind TEXT NOT NULL,
+  activity_id TEXT, invitation_id TEXT, read_at_utc TEXT, created_at_utc TEXT NOT NULL,
+  PRIMARY KEY (notification_id, access_scope_key)
+);
+CREATE TABLE pending_command (
+  command_id TEXT NOT NULL PRIMARY KEY, owner_scope_key TEXT NOT NULL, kind TEXT NOT NULL,
+  payload_ciphertext BLOB NOT NULL, payload_hash TEXT NOT NULL, idempotency_key TEXT NOT NULL UNIQUE,
+  created_at_epoch_ms INTEGER NOT NULL, sequence_number INTEGER NOT NULL,
+  dependency_ids_json TEXT NOT NULL, retry_count INTEGER NOT NULL DEFAULT 0, status TEXT NOT NULL,
+  last_error_code TEXT, last_error_message TEXT, correlation_id TEXT
+);
+CREATE INDEX pending_command_replay_idx ON pending_command(owner_scope_key, status, sequence_number, created_at_epoch_ms);

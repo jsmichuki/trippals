@@ -1,0 +1,195 @@
+-- SQLDelight cache schema. Database opening/encryption configuration is platform-owned.
+-- Rows holding member-only content use an account/activity access scope and are purged
+-- when the server denies access, membership ends, or the account signs out.
+
+CREATE TABLE browse_preference (
+  preference_key TEXT NOT NULL PRIMARY KEY,
+  selected_city_id TEXT,
+  start_local_date TEXT,
+  end_local_date TEXT,
+  category_filters_json TEXT NOT NULL,
+  fetched_at_epoch_ms INTEGER NOT NULL,
+  expires_at_epoch_ms INTEGER,
+  access_scope_key TEXT NOT NULL
+);
+
+CREATE TABLE cache_metadata (
+  resource_type TEXT NOT NULL,
+  resource_key TEXT NOT NULL,
+  access_scope_key TEXT NOT NULL,
+  fetched_at_epoch_ms INTEGER NOT NULL,
+  expires_at_epoch_ms INTEGER,
+  server_version TEXT,
+  server_cursor TEXT,
+  PRIMARY KEY (resource_type, resource_key, access_scope_key)
+);
+
+CREATE TABLE activity_preview_cache (
+  activity_id TEXT NOT NULL PRIMARY KEY,
+  city_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  category TEXT NOT NULL,
+  start_at_utc TEXT NOT NULL,
+  end_at_utc TEXT NOT NULL,
+  iana_timezone TEXT NOT NULL,
+  status TEXT NOT NULL,
+  access_scope_key TEXT NOT NULL
+);
+
+CREATE INDEX activity_preview_city_idx
+ON activity_preview_cache(city_id, access_scope_key, start_at_utc);
+
+CREATE TABLE activity_idea_cache (
+  idea_id TEXT NOT NULL PRIMARY KEY,
+  city_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  category TEXT NOT NULL,
+  description TEXT NOT NULL,
+  access_scope_key TEXT NOT NULL
+);
+
+CREATE INDEX activity_idea_city_idx
+ON activity_idea_cache(city_id, access_scope_key);
+
+CREATE TABLE plan_summary_cache (
+  activity_id TEXT NOT NULL,
+  access_scope_key TEXT NOT NULL,
+  section TEXT NOT NULL,
+  title TEXT NOT NULL,
+  status TEXT NOT NULL,
+  start_at_utc TEXT,
+  iana_timezone TEXT,
+  PRIMARY KEY (activity_id, access_scope_key)
+);
+
+CREATE TABLE invitation_summary_cache (
+  invitation_id TEXT NOT NULL,
+  access_scope_key TEXT NOT NULL,
+  activity_id TEXT NOT NULL,
+  status TEXT NOT NULL,
+  expires_at_utc TEXT,
+  PRIMARY KEY (invitation_id, access_scope_key)
+);
+
+CREATE TABLE pinned_logistics_cache (
+  activity_id TEXT NOT NULL,
+  access_scope_key TEXT NOT NULL,
+  payload_ciphertext BLOB NOT NULL,
+  key_reference TEXT NOT NULL,
+  PRIMARY KEY (activity_id, access_scope_key)
+);
+
+-- Never store plaintext chat text in this database. The adapter encrypts and
+-- decrypts body_ciphertext using a platform-backed database/key policy.
+CREATE TABLE recent_message_cache (
+  message_id TEXT NOT NULL,
+  conversation_id TEXT NOT NULL,
+  activity_id TEXT NOT NULL,
+  access_scope_key TEXT NOT NULL,
+  sender_id TEXT,
+  sequence INTEGER NOT NULL,
+  created_at_utc TEXT NOT NULL,
+  body_ciphertext BLOB NOT NULL,
+  key_reference TEXT NOT NULL,
+  PRIMARY KEY (message_id, access_scope_key)
+);
+
+CREATE INDEX recent_message_conversation_idx
+ON recent_message_cache(conversation_id, access_scope_key, sequence);
+
+CREATE TABLE notification_cache (
+  notification_id TEXT NOT NULL,
+  access_scope_key TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  activity_id TEXT,
+  invitation_id TEXT,
+  read_at_utc TEXT,
+  created_at_utc TEXT NOT NULL,
+  PRIMARY KEY (notification_id, access_scope_key)
+);
+
+CREATE TABLE pending_command (
+  command_id TEXT NOT NULL PRIMARY KEY,
+  owner_scope_key TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  payload_ciphertext BLOB NOT NULL,
+  payload_hash TEXT NOT NULL,
+  idempotency_key TEXT NOT NULL UNIQUE,
+  created_at_epoch_ms INTEGER NOT NULL,
+  sequence_number INTEGER NOT NULL,
+  dependency_ids_json TEXT NOT NULL,
+  retry_count INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL,
+  last_error_code TEXT,
+  last_error_message TEXT,
+  correlation_id TEXT
+);
+
+CREATE INDEX pending_command_replay_idx
+ON pending_command(owner_scope_key, status, sequence_number, created_at_epoch_ms);
+
+selectBrowsePreference:
+SELECT * FROM browse_preference WHERE preference_key = :preferenceKey;
+
+upsertBrowsePreference:
+INSERT OR REPLACE INTO browse_preference (
+  preference_key, selected_city_id, start_local_date, end_local_date,
+  category_filters_json, fetched_at_epoch_ms, expires_at_epoch_ms, access_scope_key
+) VALUES (
+  :preferenceKey, :selectedCityId, :startLocalDate, :endLocalDate,
+  :categoryFiltersJson, :fetchedAtEpochMs, :expiresAtEpochMs, :scopeKey
+);
+
+selectActivityPreviews:
+SELECT activity_preview_cache.*,
+       cache_metadata.fetched_at_epoch_ms,
+       cache_metadata.expires_at_epoch_ms,
+       cache_metadata.server_version,
+       cache_metadata.server_cursor
+FROM activity_preview_cache
+LEFT JOIN cache_metadata ON cache_metadata.resource_type = 'activity_previews'
+  AND cache_metadata.resource_key = activity_preview_cache.city_id
+  AND cache_metadata.access_scope_key = activity_preview_cache.access_scope_key
+WHERE activity_preview_cache.city_id = :cityId
+  AND activity_preview_cache.access_scope_key = :scopeKey
+ORDER BY start_at_utc;
+
+selectReplayableCommands:
+SELECT * FROM pending_command
+WHERE owner_scope_key = :scopeKey
+ORDER BY sequence_number, created_at_epoch_ms;
+
+selectCommandByIdempotencyKey:
+SELECT * FROM pending_command WHERE idempotency_key = :idempotencyKey;
+
+upsertCommand:
+INSERT OR REPLACE INTO pending_command (
+  command_id, owner_scope_key, kind, payload_ciphertext, payload_hash,
+  idempotency_key, created_at_epoch_ms, sequence_number, dependency_ids_json,
+  retry_count, status, last_error_code, last_error_message, correlation_id
+) VALUES (
+  :commandId, :ownerScopeKey, :kind, :payloadCiphertext, :payloadHash,
+  :idempotencyKey, :createdAtEpochMs, :sequenceNumber, :dependencyIdsJson,
+  :retryCount, :status, :lastErrorCode, :lastErrorMessage, :correlationId
+);
+
+deleteScopedPlans:
+DELETE FROM plan_summary_cache WHERE access_scope_key = :scopeKey;
+
+deleteScopedInvitations:
+DELETE FROM invitation_summary_cache WHERE access_scope_key = :scopeKey;
+
+deleteScopedLogistics:
+DELETE FROM pinned_logistics_cache WHERE access_scope_key = :scopeKey;
+
+deleteScopedMessages:
+DELETE FROM recent_message_cache WHERE access_scope_key = :scopeKey;
+
+deleteScopedNotifications:
+DELETE FROM notification_cache WHERE access_scope_key = :scopeKey;
+
+deleteScopedMetadata:
+DELETE FROM cache_metadata WHERE access_scope_key = :scopeKey;
+
+deleteScopedCommands:
+DELETE FROM pending_command WHERE owner_scope_key = :scopeKey;
