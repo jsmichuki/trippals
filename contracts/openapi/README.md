@@ -12,3 +12,11 @@ host/staff response schemas where fields differ.
 The API contract must never make private meeting details, invitation
 availability, contact data, report material, or chat bodies available to an
 unauthorized response shape.
+
+## Local workflow testing
+
+Import the [Postman collection](../postman/TripPals_API.postman_collection.json)
+and its [local environment](../postman/TripPals_Local.postman_environment.json)
+for synthetic endpoint test data. The [API testing guide](../../docs/API_TESTING_GUIDE.md)
+documents every feature's prerequisites, authorization role, request sequence,
+expected privacy/authorization behavior, and destructive-test cleanup.

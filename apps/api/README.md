@@ -39,3 +39,9 @@ Keep the
 backend modular: contexts in `lib/trip_pals/`, HTTP adapters in
 `lib/trip_pals_web/controllers/v1/`, Channels in `lib/trip_pals_web/channels/`,
 and migrations in `priv/repo/migrations/`.
+
+For manual API verification, import the synthetic local Postman collection at
+[`contracts/postman/TripPals_API.postman_collection.json`](../../contracts/postman/TripPals_API.postman_collection.json)
+and follow [`docs/API_TESTING_GUIDE.md`](../../docs/API_TESTING_GUIDE.md). The guide
+includes the authorization roles, WebAuthn/provider limitations, privacy checks,
+and cleanup sequence for every shipped feature.

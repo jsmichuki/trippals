@@ -1,0 +1,133 @@
+{
+  "info": {
+    "_postman_id": "5317e09e-cf5f-4ec3-9e89-9e7a64e0c2e0",
+    "name": "TripPals API — local feature tests",
+    "description": "Synthetic local test workflow. Import TripPals_Local.postman_environment.json and read docs/API_TESTING_GUIDE.md before running. Every mutation uses a new Idempotency-Key. Never export real tokens, provider JWTs, passkey data, chat text, report evidence, or device tokens.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "png_1x1_base64", "value": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9J5xkAAAAASUVORK5CYII="},
+    {"key": "png_1x1_bytes", "value": "68"}
+  ],
+  "item": [
+    {
+      "name": "00 Health and discovery",
+      "item": [
+        {"name": "Up", "request": {"method": "GET", "url": "{{base_url}}/up"}, "event": [{"listen": "test", "script": {"exec": ["pm.test('up', () => pm.response.to.have.status(200));"]}}]},
+        {"name": "Ready", "request": {"method": "GET", "url": "{{base_url}}/ready"}, "event": [{"listen": "test", "script": {"exec": ["pm.test('ready', () => pm.response.to.have.status(200));"]}}]},
+        {"name": "Hello", "request": {"method": "GET", "url": "{{base_url}}/v1/hello"}},
+        {"name": "Cities (capture city_id)", "request": {"method": "GET", "url": "{{base_url}}/v1/cities"}, "event": [{"listen": "test", "script": {"exec": ["pm.test('success', () => pm.expect(pm.response.code).to.be.oneOf([200]));", "const body = pm.response.json(); const cities = body.data && (body.data.cities || body.data); if (Array.isArray(cities) && cities[0] && cities[0].id) pm.environment.set('city_id', cities[0].id);"]}}]},
+        {"name": "Activity ideas", "request": {"method": "GET", "url": "{{base_url}}/v1/activity-ideas"}},
+        {"name": "Discover activities", "request": {"method": "GET", "url": "{{base_url}}/v1/activities?city_id={{city_id}}&date=2026-10-15&limit=20"}},
+        {"name": "Get activity", "request": {"method": "GET", "url": "{{base_url}}/v1/activities/{{activity_id}}"}}
+      ]
+    },
+    {
+      "name": "01 Identity, profile, and sessions",
+      "item": [
+        {"name": "Get my profile", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{host_access_token}}"}], "url": "{{base_url}}/v1/me"}},
+        {"name": "Complete synthetic profile", "request": {"method": "PATCH", "header": [{"key": "Authorization", "value": "Bearer {{host_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"display_name\": \"Postman Host\",\n  \"adult_confirmation\": true,\n  \"community_rule_version\": \"v1\"\n}"}, "url": "{{base_url}}/v1/me"}},
+        {"name": "Passkey authentication options", "request": {"method": "POST", "header": [{"key": "Idempotency-Key", "value": "{{$guid}}"}], "url": "{{base_url}}/v1/auth/passkeys/authenticate/options"}},
+        {"name": "Passkey authentication complete (real assertion required)", "request": {"method": "POST", "header": [{"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"challenge_id\": \"copy-from-options\",\n  \"credential_id\": \"real-base64url-credential-id\",\n  \"authenticator_data\": \"real-base64url-data\",\n  \"signature\": \"real-base64url-signature\",\n  \"client_data_json\": \"real-base64url-client-data\"\n}"}, "url": "{{base_url}}/v1/auth/passkeys/authenticate/complete"}},
+        {"name": "Google completion (real JWT and nonce required)", "request": {"method": "POST", "header": [{"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"identity_token\": \"paste-a-disposable-real-provider-token-locally\",\n  \"nonce\": \"the-exact-issued-nonce\",\n  \"return_intent\": \"profile\"\n}"}, "url": "{{base_url}}/v1/auth/google/complete"}},
+        {"name": "Apple completion (real JWT and nonce required)", "request": {"method": "POST", "header": [{"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"identity_token\": \"paste-a-disposable-real-provider-token-locally\",\n  \"nonce\": \"the-exact-issued-nonce\"\n}"}, "url": "{{base_url}}/v1/auth/apple/complete"}},
+        {"name": "Passkey registration options", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{host_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}], "url": "{{base_url}}/v1/auth/passkeys/register/options"}},
+        {"name": "Passkey registration complete (real attestation required)", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{host_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"challenge_id\": \"copy-from-options\",\n  \"attestation_object\": \"real-base64url-attestation\",\n  \"client_data_json\": \"real-base64url-client-data\",\n  \"label\": \"Local Postman passkey\"\n}"}, "url": "{{base_url}}/v1/auth/passkeys/register/complete"}},
+        {"name": "Refresh session (real refresh token required)", "request": {"method": "POST", "header": [{"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"refresh_token\": \"paste-local-disposable-refresh-token\"}"}, "url": "{{base_url}}/v1/auth/refresh"}},
+        {"name": "Logout current session", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{host_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}], "url": "{{base_url}}/v1/auth/logout"}},
+        {"name": "Delete current session", "request": {"method": "DELETE", "header": [{"key": "Authorization", "value": "Bearer {{host_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}], "url": "{{base_url}}/v1/auth/session"}},
+        {"name": "Unlink provider (requires alternative login)", "request": {"method": "DELETE", "header": [{"key": "Authorization", "value": "Bearer {{host_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}], "url": "{{base_url}}/v1/me/identities/google"}},
+        {"name": "Delete passkey (requires recent auth)", "request": {"method": "DELETE", "header": [{"key": "Authorization", "value": "Bearer {{host_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}], "url": "{{base_url}}/v1/me/passkeys/replace-with-real-credential-id"}}
+      ]
+    },
+    {
+      "name": "02 Activities",
+      "item": [
+        {"name": "Create draft (capture activity_id/version)", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{host_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"city_id\": \"{{city_id}}\",\n  \"title\": \"Postman sunset walk\",\n  \"category\": \"walking\",\n  \"description\": \"A short synthetic local test activity.\",\n  \"start_at\": \"2026-10-15T15:00:00Z\",\n  \"end_at\": \"2026-10-15T16:00:00Z\",\n  \"iana_timezone\": \"Africa/Nairobi\",\n  \"public_area\": \"City centre\",\n  \"participant_meeting_details\": \"Test meeting detail for Going members only.\",\n  \"capacity_total\": 2\n}"}, "url": "{{base_url}}/v1/activities"}, "event": [{"listen": "test", "script": {"exec": ["pm.test('draft created', () => pm.response.to.have.status(201));", "const data = pm.response.json().data; if (data) { pm.environment.set('activity_id', data.id); pm.environment.set('activity_version', data.version); }"]}}]},
+        {"name": "Update draft (optimistic concurrency)", "request": {"method": "PATCH", "header": [{"key": "Authorization", "value": "Bearer {{host_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "If-Match", "value": "{{activity_version}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"description\": \"Updated synthetic local test activity.\"}"}, "url": "{{base_url}}/v1/activities/{{activity_id}}"}, "event": [{"listen": "test", "script": {"exec": ["const data = pm.response.json().data; if (data && data.version) pm.environment.set('activity_version', data.version);"]}}]},
+        {"name": "Publish", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{host_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}], "url": "{{base_url}}/v1/activities/{{activity_id}}/publish"}},
+        {"name": "Confirm", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{host_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}], "url": "{{base_url}}/v1/activities/{{activity_id}}/confirm"}}
+      ]
+    },
+    {
+      "name": "03 Participation and conversation",
+      "item": [
+        {"name": "Express interest", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}], "url": "{{base_url}}/v1/activities/{{activity_id}}/interest"}},
+        {"name": "Join (capture conversation_id)", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}], "url": "{{base_url}}/v1/activities/{{activity_id}}/join"}, "event": [{"listen": "test", "script": {"exec": ["const data = pm.response.json().data; if (data && data.conversation_id) pm.environment.set('conversation_id', data.conversation_id);"]}}]},
+        {"name": "My plans", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}], "url": "{{base_url}}/v1/me/plans"}},
+        {"name": "Reconfirm", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"answer\": \"yes\"}"}, "url": "{{base_url}}/v1/activities/{{activity_id}}/reconfirm"}},
+        {"name": "List messages", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}], "url": "{{base_url}}/v1/conversations/{{conversation_id}}/messages"}},
+        {"name": "Send synthetic message", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"body\": \"Postman synthetic test message\", \"client_message_id\": \"{{$guid}}\"}"}, "url": "{{base_url}}/v1/conversations/{{conversation_id}}/messages"}},
+        {"name": "Start", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{host_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}], "url": "{{base_url}}/v1/activities/{{activity_id}}/start"}},
+        {"name": "Record attendance", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{host_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"attendance\": \"attended\"}"}, "url": "{{base_url}}/v1/activities/{{activity_id}}/attendance"}},
+        {"name": "Finish", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{host_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"occurred\": true, \"reason\": \"Synthetic test completed\"}"}, "url": "{{base_url}}/v1/activities/{{activity_id}}/finish"}}
+      ]
+    },
+    {
+      "name": "04 Invitations",
+      "item": [
+        {"name": "Invitation settings", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}], "url": "{{base_url}}/v1/me/invitation-settings"}},
+        {"name": "Enable invitation consent", "request": {"method": "PATCH", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"enabled\": true, \"shareable_fields\": {\"interests\": true}}"}, "url": "{{base_url}}/v1/me/invitation-settings"}},
+        {"name": "Create minimal availability", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"city_id\": \"{{city_id}}\", \"role\": \"traveler\", \"start_local_date\": \"2026-10-15\", \"end_local_date\": \"2026-10-16\", \"time_preferences\": {\"morning\": true}, \"shareable_fields\": {\"interests\": true}, \"visible\": true}"}, "url": "{{base_url}}/v1/me/availabilities"}, "event": [{"listen": "test", "script": {"exec": ["const data = pm.response.json().data; if (data && data.id) pm.environment.set('availability_id', data.id);"]}}]},
+        {"name": "List/update/delete availability", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}], "url": "{{base_url}}/v1/me/availabilities"}},
+        {"name": "Update availability", "request": {"method": "PATCH", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"visible\": false}"}, "url": "{{base_url}}/v1/me/availabilities/{{availability_id}}"}},
+        {"name": "Host candidates (launch-gated)", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{host_access_token}}"}], "url": "{{base_url}}/v1/activities/{{activity_id}}/invitation-candidates?limit=10"}},
+        {"name": "Send invitations", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{host_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"recipient_ids\": [\"{{target_user_id}}\"]}"}, "url": "{{base_url}}/v1/activities/{{activity_id}}/invitations"}},
+        {"name": "Invitation inbox (capture invitation_id)", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}], "url": "{{base_url}}/v1/me/invitations"}, "event": [{"listen": "test", "script": {"exec": ["const data = pm.response.json().data; const invitations = data && data.invitations; if (Array.isArray(invitations) && invitations[0] && invitations[0].id) pm.environment.set('invitation_id', invitations[0].id);"]}}]},
+        {"name": "Show invitation", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}], "url": "{{base_url}}/v1/invitations/{{invitation_id}}"}},
+        {"name": "Decline invitation", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}], "url": "{{base_url}}/v1/invitations/{{invitation_id}}/decline"}},
+        {"name": "Delete availability", "request": {"method": "DELETE", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}], "url": "{{base_url}}/v1/me/availabilities/{{availability_id}}"}}
+      ]
+    },
+    {
+      "name": "05 Safety and moderation",
+      "item": [
+        {"name": "My restrictions", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}], "url": "{{base_url}}/v1/me/restrictions"}},
+        {"name": "Block / unblock target", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"reason_code\": \"synthetic_local_test\"}"}, "url": "{{base_url}}/v1/blocks/{{target_user_id}}"}},
+        {"name": "Unblock target", "request": {"method": "DELETE", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}], "url": "{{base_url}}/v1/blocks/{{target_user_id}}"}},
+        {"name": "Submit synthetic report", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"target_type\": \"account\", \"target_id\": \"{{target_user_id}}\", \"reason_code\": \"other\", \"context\": {\"surface\": \"local_postman\", \"note\": \"Synthetic local test report\"}}"}, "url": "{{base_url}}/v1/reports"}, "event": [{"listen": "test", "script": {"exec": ["const data = pm.response.json().data; if (data) { if (data.report_id) pm.environment.set('report_id', data.report_id); if (data.case_id) pm.environment.set('case_id', data.case_id); }"]}}]},
+        {"name": "Moderator case queue", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{moderator_access_token}}"}], "url": "{{base_url}}/v1/admin/moderation/cases"}},
+        {"name": "Assign case", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{moderator_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"reason\": \"Synthetic case assignment\"}"}, "url": "{{base_url}}/v1/admin/moderation/cases/{{case_id}}/assign"}},
+        {"name": "Impose restriction (capture restriction_id)", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{moderator_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"case_id\": \"{{case_id}}\", \"kind\": \"join_freeze\", \"reason\": \"Synthetic moderator test\", \"notice\": \"Synthetic local restriction notice\"}"}, "url": "{{base_url}}/v1/admin/moderation/restrictions/{{target_user_id}}"}, "event": [{"listen": "test", "script": {"exec": ["const data = pm.response.json().data; if (data && data.id) pm.environment.set('restriction_id', data.id);"]}}]},
+        {"name": "Submit appeal as restricted account (capture appeal_id)", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{target_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"restriction_id\": \"{{restriction_id}}\", \"statement\": \"Synthetic appeal request\"}"}, "url": "{{base_url}}/v1/appeals"}, "event": [{"listen": "test", "script": {"exec": ["const data = pm.response.json().data; if (data && data.id) pm.environment.set('appeal_id', data.id);"]}}]},
+        {"name": "Review appeal", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{moderator_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"decision\": \"upheld\", \"reason\": \"Synthetic moderator decision\"}"}, "url": "{{base_url}}/v1/admin/moderation/appeals/{{appeal_id}}/review"}}
+      ]
+    },
+    {
+      "name": "06 Notifications and devices",
+      "item": [
+        {"name": "List notifications", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}], "url": "{{base_url}}/v1/notifications"}},
+        {"name": "Get/update preferences", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}], "url": "{{base_url}}/v1/me/notification-preferences"}},
+        {"name": "Update notification preferences", "request": {"method": "PATCH", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"nonessential_enabled\": false, \"push_enabled\": false}"}, "url": "{{base_url}}/v1/me/notification-preferences"}},
+        {"name": "Register synthetic device", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"platform\": \"ios\", \"token\": \"postman-synthetic-device-token-0001\"}"}, "url": "{{base_url}}/v1/devices"}, "event": [{"listen": "test", "script": {"exec": ["const data = pm.response.json().data; if (data && data.id) pm.environment.set('device_id', data.id);"]}}]},
+        {"name": "Mark notification read", "request": {"method": "PATCH", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}], "url": "{{base_url}}/v1/notifications/{{notification_id}}/read"}},
+        {"name": "Delete device", "request": {"method": "DELETE", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}], "url": "{{base_url}}/v1/devices/{{device_id}}"}}
+      ]
+    },
+    {
+      "name": "07 Private media",
+      "item": [
+        {"name": "Avatar upload intent", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"content_type\": \"image/png\", \"byte_size\": {{png_1x1_bytes}}}"}, "url": "{{base_url}}/v1/media/avatar/upload-intents"}, "event": [{"listen": "test", "script": {"exec": ["const data = pm.response.json().data; if (data) { if (data.media_id) pm.environment.set('media_id', data.media_id); if (data.upload_token) pm.environment.set('upload_token', data.upload_token); }"]}}]},
+        {"name": "Upload one-pixel PNG", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "X-Upload-Token", "value": "{{upload_token}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"content_base64\": \"{{png_1x1_base64}}\"}"}, "url": "{{base_url}}/v1/media/{{media_id}}/upload"}},
+        {"name": "Confirm upload", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "X-Upload-Token", "value": "{{upload_token}}"}], "url": "{{base_url}}/v1/media/{{media_id}}/confirm"}},
+        {"name": "Get media access", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}], "url": "{{base_url}}/v1/media/{{media_id}}/access"}, "event": [{"listen": "test", "script": {"exec": ["const data = pm.response.json().data; if (data && data.access_token) pm.environment.set('media_access_token', data.access_token);"]}}]},
+        {"name": "Read private media", "request": {"method": "GET", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "X-Media-Access-Token", "value": "{{media_access_token}}"}], "url": "{{base_url}}/v1/media/{{media_id}}/content"}},
+        {"name": "Report evidence upload intent", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"content_type\": \"image/png\", \"byte_size\": {{png_1x1_bytes}}}"}, "url": "{{base_url}}/v1/reports/{{report_id}}/evidence/upload-intents"}}
+      ]
+    },
+    {
+      "name": "08 Alternate lifecycle checks (use a fresh activity)",
+      "description": "These requests are intentionally separate from the normal sequence. Create and publish a second activity before testing cancellation or early leave.",
+      "item": [
+        {"name": "Cancel a fresh activity", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{host_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}, {"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"reason\": \"Synthetic test cancellation\"}"}, "url": "{{base_url}}/v1/activities/{{activity_id}}/cancel"}},
+        {"name": "Leave before an activity starts", "request": {"method": "POST", "header": [{"key": "Authorization", "value": "Bearer {{member_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}], "url": "{{base_url}}/v1/activities/{{activity_id}}/leave"}}
+      ]
+    },
+    {
+      "name": "09 Destructive disposable-account checks",
+      "item": [
+        {"name": "Delete account LAST — disposable account and recent auth required", "request": {"method": "DELETE", "header": [{"key": "Authorization", "value": "Bearer {{target_access_token}}"}, {"key": "Idempotency-Key", "value": "{{$guid}}"}], "url": "{{base_url}}/v1/me"}}
+      ]
+    }
+  ]
+}
