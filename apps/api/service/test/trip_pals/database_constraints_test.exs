@@ -68,14 +68,17 @@ defmodule TripPals.DatabaseConstraintsTest do
     assert plan_text(search_plan) =~ "activities_search_document_index"
   end
 
-  test "migrations use reversible change callbacks" do
+  test "migrations use reversible callbacks" do
     migration_directory = Path.expand("../../priv/repo/migrations", __DIR__)
 
     migration_directory
     |> File.ls!()
     |> Enum.reject(&String.starts_with?(&1, "."))
     |> Enum.each(fn filename ->
-      assert File.read!(Path.join(migration_directory, filename)) =~ "def change do"
+      source = File.read!(Path.join(migration_directory, filename))
+
+      assert source =~ "def change do" or
+               (source =~ "def up do" and source =~ "def down do")
     end)
   end
 

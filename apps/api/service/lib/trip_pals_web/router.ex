@@ -73,6 +73,17 @@ defmodule TripPalsWeb.Router do
 
       get "/me", MeController, :show
       get "/me/plans", ParticipationController, :plans
+      get "/conversations/:id/messages", ConversationController, :messages
+      get "/me/invitation-settings", InvitationController, :settings
+      get "/me/availabilities", InvitationController, :availabilities
+      get "/me/invitations", InvitationController, :inbox
+      get "/invitations/:id", InvitationController, :show
+      get "/activities/:id/invitation-candidates", InvitationController, :candidates
+      get "/me/restrictions", SafetyController, :restrictions
+      get "/notifications", NotificationController, :index
+      get "/me/notification-preferences", NotificationController, :preferences
+      get "/media/:id/access", MediaController, :access
+      get "/media/:id/content", MediaController, :content
     end
 
     scope "/" do
@@ -89,6 +100,25 @@ defmodule TripPalsWeb.Router do
       post "/activities/:id/leave", ParticipationController, :leave
       post "/activities/:id/reconfirm", ParticipationController, :reconfirm
       post "/activities/:id/attendance", ParticipationController, :attendance
+      post "/conversations/:id/messages", ConversationController, :create_message
+      patch "/me/invitation-settings", InvitationController, :update_settings
+      post "/me/availabilities", InvitationController, :create_availability
+      patch "/me/availabilities/:id", InvitationController, :update_availability
+      delete "/me/availabilities/:id", InvitationController, :delete_availability
+      post "/activities/:id/invitations", InvitationController, :send
+      post "/invitations/:id/decline", InvitationController, :decline
+      post "/reports", SafetyController, :create_report
+      post "/blocks/:user_id", SafetyController, :block
+      delete "/blocks/:user_id", SafetyController, :unblock
+      post "/appeals", SafetyController, :create_appeal
+      patch "/me/notification-preferences", NotificationController, :update_preferences
+      post "/devices", DeviceController, :create
+      delete "/devices/:id", DeviceController, :delete
+      patch "/notifications/:id/read", NotificationController, :mark_read
+      post "/media/avatar/upload-intents", MediaController, :avatar_intent
+      post "/reports/:report_id/evidence/upload-intents", MediaController, :report_evidence_intent
+      post "/media/:id/upload", MediaController, :upload
+      post "/media/:id/confirm", MediaController, :confirm
       delete "/auth/session", AuthController, :delete_session
       patch "/me", MeController, :update
       delete "/me/passkeys/:credential_id", MeController, :delete_passkey
@@ -101,6 +131,20 @@ defmodule TripPalsWeb.Router do
       pipe_through [:member, :state_changing, :activity_mutation]
 
       patch "/activities/:id", ActivityController, :update
+    end
+
+    scope "/admin" do
+      pipe_through [:moderator]
+
+      get "/moderation/cases", AdminSafetyController, :case_queue
+    end
+
+    scope "/admin" do
+      pipe_through [:moderator, :state_changing]
+
+      post "/moderation/cases/:case_id/assign", AdminSafetyController, :assign_case
+      post "/moderation/restrictions/:user_id", AdminSafetyController, :impose_restriction
+      post "/moderation/appeals/:appeal_id/review", AdminSafetyController, :review_appeal
     end
 
     options "/*path", PreflightController, :show

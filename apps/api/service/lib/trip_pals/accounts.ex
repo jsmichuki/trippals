@@ -124,12 +124,12 @@ defmodule TripPals.Accounts do
         on: user.id == session.user_id,
         where: session.id == ^session_id and session.user_id == ^user_id,
         where: is_nil(session.revoked_at) and user.status == "active",
-        select: %{id: user.id, session_id: session.id, roles: []}
+        select: %{id: user.id, session_id: session.id}
       )
 
     case Repo.one(query) do
       nil -> {:error, :invalid_session}
-      actor -> {:ok, actor}
+      actor -> {:ok, Map.put(actor, :roles, TripPals.TrustSafety.staff_roles(actor.id))}
     end
   end
 

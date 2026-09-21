@@ -23,6 +23,23 @@ config :trip_pals,
     analytics: [provider: nil]
   ]
 
+config :trip_pals, Oban,
+  repo: TripPals.Repo,
+  queues: [notifications: 10, lifecycle: 5],
+  plugins: [
+    {Oban.Plugins.Pruner, max_age: 86_400},
+    {Oban.Plugins.Cron,
+     crontab: [
+       {"*/1 * * * *", TripPals.Workers.OutboxDispatch},
+       {"*/15 * * * *", TripPals.Workers.HostConfirmationReminder},
+       {"0 * * * *", TripPals.Workers.AttendanceReminder},
+       {"*/15 * * * *", TripPals.Workers.ActivityLifecycleSweep},
+       {"*/15 * * * *", TripPals.Workers.InvitationLifecycleSweep},
+       {"0 * * * *", TripPals.Workers.ConversationRetentionSweep},
+       {"0 * * * *", TripPals.Workers.MediaCleanup}
+     ]}
+  ]
+
 # Configure the endpoint
 config :trip_pals, TripPalsWeb.Endpoint,
   url: [host: "localhost"],
@@ -56,7 +73,10 @@ config :phoenix, :filter_parameters, [
   "authenticator_data",
   "signature",
   "client_data_json",
-  "biometric"
+  "biometric",
+  "upload_token",
+  "content_base64",
+  "x-media-access-token"
 ]
 
 # Import environment specific config. This must remain at the bottom

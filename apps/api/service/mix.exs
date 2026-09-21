@@ -49,6 +49,7 @@ defmodule TripPals.MixProject do
       {:req, "~> 0.7.4"},
       {:jose, "~> 1.11"},
       {:wax_, "~> 0.7.0"},
+      {:oban, "~> 2.19"},
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"}
     ]

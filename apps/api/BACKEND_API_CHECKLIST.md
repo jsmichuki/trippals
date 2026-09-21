@@ -292,45 +292,45 @@ conversation for its host and Going members only.
 
 ### Persistence and lifecycle
 
-- [ ] Add `conversations`, `conversation_memberships`, `messages`,
+- [x] Add `conversations`, `conversation_memberships`, `messages`,
   `event_system_messages`, and message moderation/report references.
-- [ ] Enforce exactly one conversation per activity and unique
+- [x] Enforce exactly one conversation per activity and unique
   `(conversation_id, sender_id, client_message_id)` for retry-safe messages.
-- [ ] Add deterministic activity-local/server message sequence and index message
+- [x] Add deterministic activity-local/server message sequence and index message
   history by `(conversation_id, created_at DESC, id DESC)` or equivalent cursor.
-- [ ] Derive pinned logistics from canonical Activity fields; do not make a chat
+- [x] Derive pinned logistics from canonical Activity fields; do not make a chat
   message the authoritative plan record.
-- [ ] Implement conversation states: active, bounded grace, read-only, archived,
+- [x] Implement conversation states: active, bounded grace, read-only, archived,
   and safety freeze. Revoke access when Going membership ends.
 
 ### HTTP and Channel API
 
-- [ ] Implement `GET /v1/conversations/:id/messages` with member/host-only
+- [x] Implement `GET /v1/conversations/:id/messages` with member/host-only
   authorization, cursor resume, deterministic order, and safe system-message
   representation.
-- [ ] Implement `POST /v1/conversations/:id/messages` as the HTTP fallback with
+- [x] Implement `POST /v1/conversations/:id/messages` as the HTTP fallback with
   body length/content validation, rate limiting, `client_message_id`, persistence
   before broadcast, and retry-safe response.
-- [ ] Configure authenticated sockets and authorize every Channel join.
-- [ ] Implement `activity:{activity_id}` for permitted, projection-safe activity
+- [x] Configure authenticated sockets and authorize every Channel join.
+- [x] Implement `activity:{activity_id}` for permitted, projection-safe activity
   revision/lifecycle updates and `conversation:{conversation_id}` for authorized
   chat/membership events.
-- [ ] Re-check membership on history read, send, socket connect/join, reconnect,
+- [x] Re-check membership on history read, send, socket connect/join, reconnect,
   and revocation; guests, Interested, pending-invited, left, removed, and
   restricted nonmembers cannot read or write.
-- [ ] Broadcast only after a message/system event has committed. Acknowledge
+- [x] Broadcast only after a message/system event has committed. Acknowledge
   sends only after persistence and return a cursor/sequence for recovery.
-- [ ] Treat Phoenix Presence as an ephemeral UI hint only; it must never signal
+- [x] Treat Phoenix Presence as an ephemeral UI hint only; it must never signal
   attendance or decide membership.
 
 ### Verification
 
-- [ ] Test persisted-before-broadcast, duplicate client-message retry, ordering,
+- [x] Test persisted-before-broadcast, duplicate client-message retry, ordering,
   cursor resume, offline/reconnect behavior, and membership revocation during
   composition.
-- [ ] Test Channel and HTTP authorization for guest, Interested, invitee, Going,
+- [x] Test Channel and HTTP authorization for guest, Interested, invitee, Going,
   left, restricted, host, canceled, and read-only states.
-- [ ] Test pinned logistics/event system updates, block masking policy, and no
+- [x] Test pinned logistics/event system updates, block masking policy, and no
   chat body/private directions in push payloads or guest views.
 
 ## Deliverable 7 — Notifications, outbox, devices, and lifecycle jobs
@@ -340,41 +340,41 @@ delivery is retryable, minimal, and never part of the RSVP success decision.
 
 ### Persistence and API
 
-- [ ] Add `notifications`, `notification_deliveries`, `notification_preferences`,
+- [x] Add `notifications`, `notification_deliveries`, `notification_preferences`,
   `devices`, and outbox producer/consumer contexts.
-- [ ] Implement `GET /v1/notifications` with cursor pagination and a safe
+- [x] Implement `GET /v1/notifications` with cursor pagination and a safe
   read/update mechanism if required by the client contract.
-- [ ] Implement `POST /v1/devices` and notification-preference updates with
+- [x] Implement `POST /v1/devices` and notification-preference updates with
   authenticated ownership, token lifecycle handling, and idempotency.
-- [ ] Ensure notification/push payloads contain only IDs and minimal event
+- [x] Ensure notification/push payloads contain only IDs and minimal event
   context—never chat text, private directions, availability, tokens, or report
   evidence.
-- [ ] Generate in-app notification plus outbox event transactionally for
+- [x] Generate in-app notification plus outbox event transactionally for
   invitation, confirmation, material change, cancellation, revocation, and
   other essential state changes.
 
 ### Oban work
 
-- [ ] Add PostgreSQL-backed Oban and unique/idempotent workers; do not add a
+- [x] Add PostgreSQL-backed Oban and unique/idempotent workers; do not add a
   separate queue for the MVP.
-- [ ] Implement `OutboxDispatch` with retry, deduplication, delivery state, and
+- [x] Implement `OutboxDispatch` with retry, deduplication, delivery state, and
   failure observability.
-- [ ] Implement `HostConfirmationReminder`, `AttendanceReminder`, and
+- [x] Implement `HostConfirmationReminder`, `AttendanceReminder`, and
   `ActivityLifecycleSweep` using event-city time and explicit policy cutoffs.
-- [ ] Implement `InvitationLifecycleSweep` to expire, revoke, make unavailable,
+- [x] Implement `InvitationLifecycleSweep` to expire, revoke, make unavailable,
   or mark invitations needs-review without granting a seat.
-- [ ] Implement `ConversationRetentionSweep`, `PushDelivery`, `MediaCleanup`,
+- [x] Implement `ConversationRetentionSweep`, `PushDelivery`, `MediaCleanup`,
   and `DeletionWorkflow` with stable IDs, explicit retry policy, and idempotent
   handlers.
-- [ ] Ensure worker failure never rolls back a committed Join or claims push
+- [x] Ensure worker failure never rolls back a committed Join or claims push
   delivery was successful.
 
 ### Verification
 
-- [ ] Test outbox commit/rollback boundaries, worker retry/idempotency, device
+- [x] Test outbox commit/rollback boundaries, worker retry/idempotency, device
   token invalidation, duplicate/out-of-order deep links, and essential versus
   muted nonessential notifications.
-- [ ] Test unconfirmed host, cancellation, material changes, read-only chat,
+- [x] Test unconfirmed host, cancellation, material changes, read-only chat,
   and revoked access route users to an explanatory status—not a generic home
   screen.
 
@@ -385,51 +385,51 @@ activity; recipients retain full control and no invitation reserves a seat.
 
 ### Consent and persistence
 
-- [ ] Add `availabilities`, invitation-settings fields, `invitations`,
+- [x] Add `availabilities`, invitation-settings fields, `invitations`,
   `invitation_quota_events`, and `host_invitation_rate_windows`.
-- [ ] Make discoverability default-off and explicitly revocable. Store city,
+- [x] Make discoverability default-off and explicitly revocable. Store city,
   traveler/resident role, optional local dates/time preferences, shareable
   fields, visibility, expiry, and revocation state separately from browsing.
-- [ ] Enforce one invitation per `(activity_id, recipient_id)`, invitation
+- [x] Enforce one invitation per `(activity_id, recipient_id)`, invitation
   lifecycle states, decline suppression, per-activity distinct successful-send
   quota (proposed 15), and host rolling limits in PostgreSQL transactions.
-- [ ] Do not replenish the per-activity quota after an invitation is withdrawn,
+- [x] Do not replenish the per-activity quota after an invitation is withdrawn,
   deleted, or retried.
 
 ### API and privacy
 
-- [ ] Implement `GET/PATCH /v1/me/invitation-settings` and
+- [x] Implement `GET/PATCH /v1/me/invitation-settings` and
   `POST/PATCH/DELETE /v1/me/availabilities` with explicit consent, previewable
   shared fields, expiry, and immediate opt-out behavior.
-- [ ] Implement `GET /v1/activities/:id/invitation-candidates` for the eligible
+- [x] Implement `GET /v1/activities/:id/invitation-candidates` for the eligible
   host only. Require a published/open activity, remaining seats, city feature
   enabled, and host authority.
-- [ ] Filter candidates server-side for active consent, city/date/time overlap,
+- [x] Filter candidates server-side for active consent, city/date/time overlap,
   host/self/existing participation, prior invite/decline, blocks, restrictions,
   expiry, and rate/frequency rules.
-- [ ] Return consent-limited candidate cards only. Never return exact trip dates,
+- [x] Return consent-limited candidate cards only. Never return exact trip dates,
   accommodation, contact details, GPS, raw itinerary, or opted-out/unmatched
   population counts.
-- [ ] Implement `POST /v1/activities/:id/invitations` for bounded batches.
+- [x] Implement `POST /v1/activities/:id/invitations` for bounded batches.
   Lock activity/quota, revalidate each candidate at send time, insert only valid
   invitations, increment successful distinct sends, write outbox events, and
   return per-recipient outcomes without exposing failure reasons.
-- [ ] Implement `GET /v1/me/invitations`, `GET /v1/invitations/:id`, and
+- [x] Implement `GET /v1/me/invitations`, `GET /v1/invitations/:id`, and
   `POST /v1/invitations/:id/decline` with recipient-only access and truthful
   pending/joined/declined/expired/revoked/unavailable/needs-review states.
-- [ ] Make invitation Join call the standard activity Join transaction; lock the
+- [x] Make invitation Join call the standard activity Join transaction; lock the
   invitation within it and mark it joined only after participation succeeds.
-- [ ] Reconcile pending invitations on full, start cutoff, cancellation,
+- [x] Reconcile pending invitations on full, start cutoff, cancellation,
   restriction, expiry, and material edit. Never give a pending invitee chat or
   roster access.
 
 ### Verification
 
-- [ ] Test browsing filters never create availability, opt-out prevents the next
+- [x] Test browsing filters never create availability, opt-out prevents the next
   candidate/send query, and no candidate data leak via pagination or errors.
-- [ ] Test quota/rate concurrency, partial batch failures, duplicate retries,
+- [x] Test quota/rate concurrency, partial batch failures, duplicate retries,
   decline suppression, block pairs, event full, and material-reschedule review.
-- [ ] Test invitation open/decline never reserves a seat or grants conversation
+- [x] Test invitation open/decline never reserves a seat or grants conversation
   access; invitation Join competes atomically for the final seat.
 
 ## Deliverable 9 — Reports, blocks, restrictions, appeals, and staff audit
@@ -439,40 +439,40 @@ immutable while protecting reporters.
 
 ### Persistence and policy
 
-- [ ] Add `blocks`, `reports`, `moderation_cases`, `moderation_case_events`,
+- [x] Add `blocks`, `reports`, `moderation_cases`, `moderation_case_events`,
   `account_restrictions`, `appeals`, and immutable `audit_log` tables.
-- [ ] Enforce unique `(blocker_id, blocked_id)` and `blocker_id <> blocked_id`.
-- [ ] Define target types (activity, message, account), allowed reason codes,
+- [x] Enforce unique `(blocker_id, blocked_id)` and `blocker_id <> blocked_id`.
+- [x] Define target types (activity, message, account), allowed reason codes,
   report evidence references, staff scopes, restriction effects, notice policy,
   appeal process, and urgent-safety escalation path.
-- [ ] Require a staff reason and immutable audit entry for every moderation or
+- [x] Require a staff reason and immutable audit entry for every moderation or
   administrative action; protect reporter identity from the subject.
-- [ ] Apply blocks before Join, candidate selection/sending, conversation access,
+- [x] Apply blocks before Join, candidate selection/sending, conversation access,
   and profile resolution. Explain that an in-app block cannot guarantee physical
   separation at a shared event.
 
 ### API and administration
 
-- [ ] Implement `POST /v1/reports` with safe contextual reference and no
+- [x] Implement `POST /v1/reports` with safe contextual reference and no
   unnecessary sensitive data collection.
-- [ ] Implement `POST /v1/blocks/:user_id` and `DELETE /v1/blocks/:user_id`
+- [x] Implement `POST /v1/blocks/:user_id` and `DELETE /v1/blocks/:user_id`
   with idempotent semantics and all downstream policy effects.
-- [ ] Implement `GET /v1/me/restrictions` and `POST /v1/appeals` with the
+- [x] Implement `GET /v1/me/restrictions` and `POST /v1/appeals` with the
   affected user's appropriate notice, scope, duration/review status, and appeal
   path.
-- [ ] Build protected `/admin/*` LiveView or staff JSON adapters with separate
+- [x] Build protected `/admin/*` LiveView or staff JSON adapters with separate
   staff roles, stronger authentication, scoped queries, case work queues,
   action reasons, and audit history.
-- [ ] Make moderation actions reconcile affected activities, invitations,
+- [x] Make moderation actions reconcile affected activities, invitations,
   conversations, notifications, and access explicitly rather than silently
   deleting visible state.
 
 ### Verification
 
-- [ ] Test reporter privacy, immutable audit events, explicit action reasons,
+- [x] Test reporter privacy, immutable audit events, explicit action reasons,
   scoped staff access, appeal visibility, block enforcement, and restricted-user
   behavior across API and Channel paths.
-- [ ] Test message removal/restriction, safety chat freeze, event review/cancel,
+- [x] Test message removal/restriction, safety chat freeze, event review/cancel,
   and participant notices without leaking report details.
 
 ## Deliverable 10 — Media and protected uploads
@@ -480,17 +480,17 @@ immutable while protecting reporters.
 **Outcome:** Avatar and report-evidence uploads use short-lived, scoped access
 without permanent public object URLs or unvalidated content.
 
-- [ ] Add `media_objects` with object key, owner/scope, metadata, expiration,
+- [x] Add `media_objects` with object key, owner/scope, metadata, expiration,
   validation/scan status, and deletion lifecycle.
-- [ ] Implement upload-intent and upload-confirm APIs for avatars and report
+- [x] Implement upload-intent and upload-confirm APIs for avatars and report
   evidence with authenticated, least-privilege scopes and idempotency.
-- [ ] Validate size, MIME type, content signature, and malware-scan status before
+- [x] Validate size, MIME type, content signature, and malware-scan status before
   making an avatar available; apply stricter controls to report evidence.
-- [ ] Store object keys rather than permanent public URLs; use private,
+- [x] Store object keys rather than permanent public URLs; use private,
   short-lived signed access only after server authorization.
-- [ ] Include failed/expired/unreferenced uploads in `MediaCleanup` and account
+- [x] Include failed/expired/unreferenced uploads in `MediaCleanup` and account
   deletion retention policy.
-- [ ] Test cross-user access denial, content/type/size failures, expired upload
+- [x] Test cross-user access denial, content/type/size failures, expired upload
   intents, scan failures, deletion cleanup, and absence of evidence URLs in
   public responses/logs/analytics.
 

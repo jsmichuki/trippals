@@ -11,6 +11,7 @@ defmodule TripPals.Participation do
   alias TripPals.Activities.Activity
   alias TripPals.Conversations.Conversation
   alias TripPals.Conversations.ConversationMembership
+  alias TripPals.Invitations
   alias TripPals.Participation.ParticipationHistory
   alias TripPals.Participation.Record
   alias TripPals.Platform
@@ -47,6 +48,13 @@ defmodule TripPals.Participation do
 
   def join(activity_id, user_id, key, request_hash),
     do: idempotent("join", activity_id, user_id, key, request_hash, &join_locked/2)
+
+  def join(activity_id, user_id, key, request_hash, invitation_id)
+      when is_binary(invitation_id) do
+    idempotent("join", activity_id, user_id, key, request_hash, fn locked_activity_id, actor_id ->
+      join_with_invitation_locked(locked_activity_id, actor_id, invitation_id)
+    end)
+  end
 
   def leave(activity_id, user_id, key, request_hash),
     do: idempotent("leave", activity_id, user_id, key, request_hash, &leave_locked/2)
@@ -196,6 +204,31 @@ defmodule TripPals.Participation do
             {:ok, participation}
           end
       end
+    end
+  end
+
+  defp join_with_invitation_locked(activity_id, user_id, invitation_id) do
+    with {:ok, activity} <- locked_activity(activity_id),
+         :ok <- active_account?(user_id),
+         :ok <- not_host?(activity, user_id),
+         :ok <- no_block_conflict?(activity, user_id),
+         :ok <- joinable?(activity) do
+      Invitations.with_locked_invitation_join(invitation_id, user_id, fn ->
+        # Reuse the same locked-row rules for the actual seat/membership write.
+        case Repo.get_by(Record, activity_id: activity_id, user_id: user_id) do
+          %Record{status: "going"} = record ->
+            {:ok, record}
+
+          record ->
+            with :ok <- capacity_available?(activity),
+                 {:ok, participation} <- set_status(activity, user_id, record, "going"),
+                 :ok <- increment_going_count(activity),
+                 :ok <- set_membership(activity.id, user_id, "active"),
+                 :ok <- history_and_outbox(participation, record && record.status, "going", nil) do
+              {:ok, participation}
+            end
+        end
+      end)
     end
   end
 

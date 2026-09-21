@@ -7,6 +7,19 @@ defmodule TripPalsWeb.V1.ParticipationController do
   def interest(conn, %{"id" => activity_id} = params),
     do: command(conn, activity_id, params, &Participation.interest/4)
 
+  def join(conn, %{"id" => activity_id, "invitation_id" => invitation_id} = params) do
+    case Participation.join(
+           activity_id,
+           conn.assigns.current_actor.id,
+           conn.assigns.idempotency_key,
+           request_hash(params),
+           invitation_id
+         ) do
+      {:ok, result} -> Response.ok(conn, result)
+      error -> participation_error(conn, error)
+    end
+  end
+
   def join(conn, %{"id" => activity_id} = params),
     do: command(conn, activity_id, params, &Participation.join/4)
 

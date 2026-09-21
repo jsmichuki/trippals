@@ -24,6 +24,16 @@ config :trip_pals, TripPalsWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
 if config_env() in [:prod, :staging] do
+  push_token_encryption_key =
+    System.get_env("PUSH_TOKEN_ENCRYPTION_KEY") ||
+      raise "environment variable PUSH_TOKEN_ENCRYPTION_KEY is missing"
+
+  if byte_size(push_token_encryption_key) != 32 do
+    raise "PUSH_TOKEN_ENCRYPTION_KEY must be exactly 32 bytes"
+  end
+
+  config :trip_pals, :push_token_encryption_key, push_token_encryption_key
+
   max_body_bytes =
     case System.get_env("API_MAX_BODY_BYTES") do
       nil ->

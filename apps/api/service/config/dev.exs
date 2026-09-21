@@ -57,6 +57,8 @@ config :trip_pals, :api, cors_origins: ["http://localhost:3000", "http://127.0.0
 config :trip_pals, :integrations,
   webauthn: [rp_id: "localhost", origins: ["http://localhost:3000", "http://127.0.0.1:3000"]]
 
+config :trip_pals, :push_token_encryption_key, String.duplicate("d", 32)
+
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"
 

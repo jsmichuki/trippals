@@ -10,6 +10,7 @@ defmodule TripPals.Application do
     children = [
       TripPalsWeb.Telemetry,
       TripPals.Repo,
+      {Oban, Application.fetch_env!(:trip_pals, Oban)},
       {DNSCluster, query: Application.get_env(:trip_pals, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: TripPals.PubSub},
       # Start a worker by calling: TripPals.Worker.start_link(arg)

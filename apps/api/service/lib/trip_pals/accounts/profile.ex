@@ -12,6 +12,7 @@ defmodule TripPals.Accounts.Profile do
     field :adult_eligible_at, :utc_datetime_usec
     field :invitation_discoverable, :boolean, default: false
     belongs_to :user, TripPals.Accounts.User
+    belongs_to :avatar_media, TripPals.Media.MediaObject
     timestamps(type: :utc_datetime_usec)
   end
 

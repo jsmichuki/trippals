@@ -27,6 +27,10 @@ config :trip_pals, :api,
 config :trip_pals, :integrations,
   webauthn: [rp_id: "example.test", origins: ["https://app.example.test"]]
 
+config :trip_pals, :push_token_encryption_key, String.duplicate("t", 32)
+
+config :trip_pals, Oban, testing: :manual
+
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
 
