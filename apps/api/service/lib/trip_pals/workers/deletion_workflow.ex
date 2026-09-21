@@ -6,7 +6,7 @@ defmodule TripPals.Workers.DeletionWorkflow do
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"user_id" => user_id}}),
-    do: TripPals.Notifications.Lifecycle.run_deletion(user_id)
+    do: TripPals.AccountDeletion.run(user_id)
 
   def perform(_job), do: {:discard, :invalid_deletion_job}
 end

@@ -106,6 +106,7 @@ defmodule TripPals.Invitations do
 
   def invitation_candidates(activity_id, host_id, params \\ %{}) do
     with {:ok, activity} <- eligible_host_activity(activity_id, host_id),
+         :ok <- invitation_matching_enabled?(activity.city_id),
          :ok <- seats_remaining?(activity),
          {:ok, limit} <- candidate_limit(params["limit"]) do
       now = DateTime.utc_now()
@@ -165,6 +166,16 @@ defmodule TripPals.Invitations do
     end
   end
 
+  # Matching stays disabled unless a city has been explicitly enabled after
+  # its privacy, abuse, moderation, and concierge-pilot launch review.
+  defp invitation_matching_enabled?(city_id) do
+    enabled_city_ids =
+      Application.get_env(:trip_pals, :feature_flags, [])
+      |> Keyword.get(:invitation_matching_city_ids, [])
+
+    if city_id in enabled_city_ids, do: :ok, else: {:error, :invitation_matching_disabled}
+  end
+
   def send_invitations(activity_id, host_id, recipient_ids) when is_list(recipient_ids) do
     recipient_ids =
       recipient_ids |> Enum.filter(&is_binary/1) |> Enum.uniq() |> Enum.take(@activity_quota)
@@ -174,6 +185,7 @@ defmodule TripPals.Invitations do
     else
       Repo.transaction(fn ->
         with {:ok, activity} <- locked_host_activity(activity_id, host_id),
+             :ok <- invitation_matching_enabled?(activity.city_id),
              :ok <- seats_remaining?(activity),
              :ok <- host_rate_available?(host_id, length(recipient_ids)),
              {:ok, outcomes} <- send_locked(activity, host_id, recipient_ids) do

@@ -1,0 +1,46 @@
+# Vendor-neutral production observability baseline. Values identify secret
+# manager references only; deployment must resolve them outside source control.
+service: trip_pals_api
+logs:
+  structured: true
+  retained_days: 30
+  access: production-operators-only
+  prohibited_fields:
+    - credentials
+    - bearer_tokens
+    - refresh_tokens
+    - passkey_data
+    - biometric_outcomes
+    - chat_bodies
+    - private_meeting_details
+    - exact_location
+    - availability
+    - report_evidence
+    - raw_email
+metrics:
+  scrape_interval_seconds: 30
+  alerts:
+    - readiness_failure
+    - elevated_http_5xx
+    - database_connection_saturation
+    - database_query_latency
+    - oban_retry_backlog
+    - outbox_dispatch_backlog
+    - push_delivery_failure_rate
+database:
+  tls_required: true
+  backups:
+    point_in_time_recovery: true
+    retention_days: 35
+    encrypted: true
+  restore_verification:
+    cadence: monthly
+    isolated_environment: true
+    evidence_retention_days: 365
+health:
+  liveness_path: /up
+  readiness_path: /ready
+  alert_after_consecutive_failures: 3
+secrets:
+  error_reporting_dsn: secret://trip-pals/production/error-reporting-dsn
+  analytics_write_key: secret://trip-pals/production/analytics-write-key

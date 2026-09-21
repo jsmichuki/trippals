@@ -76,6 +76,21 @@ if config_env() in [:prod, :staging] do
     push: [provider: System.get_env("PUSH_PROVIDER")],
     object_storage: [provider: System.get_env("OBJECT_STORAGE_PROVIDER")],
     analytics: [provider: System.get_env("ANALYTICS_PROVIDER")]
+
+  invitation_matching_city_ids =
+    System.get_env("TRIPPALS_INVITATION_MATCHING_CITY_IDS", "")
+    |> String.split(",", trim: true)
+    |> Enum.map(&String.trim/1)
+    |> Enum.map(fn city_id ->
+      case Ecto.UUID.cast(city_id) do
+        {:ok, _uuid} -> city_id
+        :error -> raise "TRIPPALS_INVITATION_MATCHING_CITY_IDS must contain only UUIDs"
+      end
+    end)
+
+  # Fail closed: matching is available only after the city-specific privacy,
+  # abuse, moderation, and concierge-pilot gate has been signed off.
+  config :trip_pals, :feature_flags, invitation_matching_city_ids: invitation_matching_city_ids
 end
 
 if config_env() in [:prod, :staging] do

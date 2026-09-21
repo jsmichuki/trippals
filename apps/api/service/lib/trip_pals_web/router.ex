@@ -122,6 +122,7 @@ defmodule TripPalsWeb.Router do
       delete "/auth/session", AuthController, :delete_session
       patch "/me", MeController, :update
       delete "/me/passkeys/:credential_id", MeController, :delete_passkey
+      delete "/me", AccountDeletionController, :request
       delete "/me/identities/:provider", IdentityController, :unlink
       post "/auth/passkeys/register/options", PasskeyController, :register_options
       post "/auth/passkeys/register/complete", PasskeyController, :register_complete

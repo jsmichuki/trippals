@@ -28,6 +28,16 @@ defmodule TripPals.InvitationsTest do
       })
       |> Repo.insert!()
 
+    previous_flags = Application.get_env(:trip_pals, :feature_flags, [])
+
+    Application.put_env(
+      :trip_pals,
+      :feature_flags,
+      Keyword.put(previous_flags, :invitation_matching_city_ids, [city.id])
+    )
+
+    on_exit(fn -> Application.put_env(:trip_pals, :feature_flags, previous_flags) end)
+
     %{host: host, recipient: recipient, other: other, city: city}
   end
 

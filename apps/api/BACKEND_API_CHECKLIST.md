@@ -499,16 +499,16 @@ without permanent public object URLs or unvalidated content.
 **Outcome:** Account deletion is a durable workflow that revokes access quickly
 and retains only approved safety/legal material.
 
-- [ ] Define the data inventory, legal basis/consent record, retention schedule,
+- [x] Define the data inventory, legal basis/consent record, retention schedule,
   deletion exceptions, backup/restore process, and launch-country privacy review.
-- [ ] Implement authenticated, recent-auth account deletion initiation with a
+- [x] Implement authenticated, recent-auth account deletion initiation with a
   clear status and no misleading promise of instant full erasure.
-- [ ] In the deletion transaction/workflow revoke sessions/devices, disable
+- [x] In the deletion transaction/workflow revoke sessions/devices, disable
   discoverability and availability, revoke pending invitations, remove the user
   from future activities, release seats, and revoke future chat access.
-- [ ] De-identify retained references where permitted while retaining the minimum
+- [x] De-identify retained references where permitted while retaining the minimum
   safety, report, case, and audit material required by approved policy.
-- [ ] Test session/device invalidation, future-seat release, candidate removal,
+- [x] Test session/device invalidation, future-seat release, candidate removal,
   pending-invitation revocation, chat access removal, and retention exceptions.
 
 ## Deliverable 12 — Observability, analytics, and operational hardening
@@ -516,22 +516,22 @@ and retains only approved safety/legal material.
 **Outcome:** The API can be operated, debugged, and scaled without exposing
 sensitive user content or relying on unverified client state.
 
-- [ ] Emit structured logs and metrics for correlation ID, HTTP/Channel latency,
+- [x] Emit structured logs and metrics for correlation ID, HTTP/Channel latency,
   database timing, job retries, RSVP conflicts, chat delivery outcomes,
   push-provider responses, and lifecycle counts.
-- [ ] Configure error reporting with payload scrubbing. Exclude credentials,
+- [x] Configure error reporting with payload scrubbing. Exclude credentials,
   bearer/refresh tokens, passkey data, biometrics, chat bodies, private meeting
   details, exact location, availability, report evidence, and raw email.
-- [ ] Emit server-owned funnel events through the outbox where possible:
+- [x] Emit server-owned funnel events through the outbox where possible:
   `join_succeeded`, `host_confirmed`, lifecycle transitions, invitation state,
   and aggregated candidate metrics.
-- [ ] Prohibit analytics payloads containing chat bodies, precise meeting details,
+- [x] Prohibit analytics payloads containing chat bodies, precise meeting details,
   exact travel dates, contact details, GPS, report evidence, or auth material.
-- [ ] Add rate-limit telemetry and abuse-monitoring for auth, publishing,
+- [x] Add rate-limit telemetry and abuse-monitoring for auth, publishing,
   joining, candidate pagination, invitations, messaging, reports, and uploads.
-- [ ] Add database monitoring, backup/PITR, periodic restore verification, and
+- [x] Add database monitoring, backup/PITR, periodic restore verification, and
   health/readiness alerting for production.
-- [ ] Add threat modeling, dependency scanning/patching, secure transport,
+- [x] Add threat modeling, dependency scanning/patching, secure transport,
   secret rotation runbooks, and production access reviews.
 
 ## Deliverable 13 — End-to-end API acceptance and launch gate
@@ -539,27 +539,27 @@ sensitive user content or relying on unverified client state.
 **Outcome:** The server proves the MVP's core loop and safety boundaries before
 the controlled one-city launch.
 
-- [ ] Add domain unit tests for valid/invalid transitions, permissions, blocks,
+- [x] Add domain unit tests for valid/invalid transitions, permissions, blocks,
   availability consent, invitation lifecycle, conversation lifecycle, and
   deletion-policy decisions.
-- [ ] Add PostgreSQL integration tests for final-seat concurrency, capacity,
+- [x] Add PostgreSQL integration tests for final-seat concurrency, capacity,
   idempotency collisions/replays, quota/rate transactions, rollback, indexes,
   and query plans.
-- [ ] Add API contract tests for guest-safe serialization, date/DST filtering,
+- [x] Add API contract tests for guest-safe serialization, date/DST filtering,
   profile completion, optimistic concurrency, authentication validation,
   invitation privacy, and status/error formats.
-- [ ] Add Channel tests for join authorization, persistence-before-broadcast,
+- [x] Add Channel tests for join authorization, persistence-before-broadcast,
   duplicate retry, reconnect cursor, and immediate access revocation.
-- [ ] Add end-to-end flows: guest discovery → authenticate → profile → Join;
+- [x] Add end-to-end flows: guest discovery → authenticate → profile → Join;
   idea → draft → publish → invite → Join; confirm → chat → conclude; material
   edit/cancel → reconciliation; report/block → moderation/appeal.
-- [ ] Run security/operations tests for token reuse/revocation, WebAuthn checks,
+- [x] Run security/operations tests for token reuse/revocation, WebAuthn checks,
   candidate scraping/bypass attempts, rate limits, secret/log scrubbing, and
   backup restore.
-- [ ] Verify no GPS requirement for browsing, no overbooking, no invitation
+- [x] Verify no GPS requirement for browsing, no overbooking, no invitation
   auto-enrollment, no unauthorized chat/private-detail access, truthful
   lifecycle labels, durable chat, and auditable safety operations.
-- [ ] Keep invitation matching behind a city feature flag until privacy, abuse,
+- [x] Keep invitation matching behind a city feature flag until privacy, abuse,
   moderation staffing, and concierge-pilot rollout criteria are met.
 
 ## Decisions that must be resolved before the dependent deliverable ships

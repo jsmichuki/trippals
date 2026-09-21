@@ -21,7 +21,8 @@ config :trip_pals,
     push: [provider: nil],
     object_storage: [provider: nil],
     analytics: [provider: nil]
-  ]
+  ],
+  feature_flags: [invitation_matching_city_ids: []]
 
 config :trip_pals, Oban,
   repo: TripPals.Repo,
