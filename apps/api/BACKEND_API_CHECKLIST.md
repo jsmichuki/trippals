@@ -249,40 +249,40 @@ attendance without overbooking or falsely treating an RSVP as attendance.
 
 ### Persistence and transaction rules
 
-- [ ] Add `participations` and `participation_history` with unique
+- [x] Add `participations` and `participation_history` with unique
   `(activity_id, user_id)`, explicit status, reconfirmation, attendance report,
   and audit/history timestamps.
-- [ ] Use one transaction with an activity-row lock (or equivalent advisory
+- [x] Use one transaction with an activity-row lock (or equivalent advisory
   lock) for Join: idempotency lookup, lifecycle/block/restriction checks,
   existing participation, remaining capacity, Going upsert, conversation
   membership, history, outbox, and stored idempotency response.
-- [ ] Enforce `one host seat + current Going non-host participants <= capacity`.
+- [x] Enforce `one host seat + current Going non-host participants <= capacity`.
   Interested and pending invitations never consume a seat.
-- [ ] On Leave, atomically change participation, remove future chat access,
+- [x] On Leave, atomically change participation, remove future chat access,
   create history/outbox records, and free the seat. Define any permitted
   historical transcript access separately.
-- [ ] Keep host-confirmed status, Going, reconfirmation, and attendance report
+- [x] Keep host-confirmed status, Going, reconfirmation, and attendance report
   as separate records/counters.
 
 ### API
 
-- [ ] Implement `POST /v1/activities/:id/interest`, `/join`, `/leave`,
+- [x] Implement `POST /v1/activities/:id/interest`, `/join`, `/leave`,
   `/reconfirm`, and `/attendance` with member authorization and idempotency.
-- [ ] Return a current successful result for an already-Going member rather than
+- [x] Return a current successful result for an already-Going member rather than
   allocating another seat; reject invalid terminal/full/cutoff states safely.
-- [ ] Make reconfirmation opt-in (`yes` or a leave flow for cannot attend); do
+- [x] Make reconfirmation opt-in (`yes` or a leave flow for cannot attend); do
   not infer nonattendance or silently remove a nonresponding member.
-- [ ] Implement `GET /v1/me/plans` with cursor pagination and clearly typed
+- [x] Implement `GET /v1/me/plans` with cursor pagination and clearly typed
   Going, Interested, Hosting, Invitations, Past, and Canceled/terminal views.
-- [ ] Preserve stable activity IDs across city/filter changes and return an
+- [x] Preserve stable activity IDs across city/filter changes and return an
   explanatory state rather than routing an expired/canceled plan to discovery.
 
 ### Verification
 
-- [ ] Run concurrent final-seat Join tests and prove exactly one request wins.
-- [ ] Test host + Going never exceeds 10, repeat Join/Leave idempotency,
+- [x] Run concurrent final-seat Join tests and prove exactly one request wins.
+- [x] Test host + Going never exceeds 10, repeat Join/Leave idempotency,
   transaction rollback, rejoin eligibility, and chat-membership coupling.
-- [ ] Test block/restriction/start-cutoff/full/terminal decisions and no leakage
+- [x] Test block/restriction/start-cutoff/full/terminal decisions and no leakage
   of private data in unsuccessful Join responses.
 
 ## Deliverable 6 — Conversations, durable messages, and Phoenix Channels

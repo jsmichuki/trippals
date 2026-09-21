@@ -72,6 +72,7 @@ defmodule TripPalsWeb.Router do
       pipe_through [:member]
 
       get "/me", MeController, :show
+      get "/me/plans", ParticipationController, :plans
     end
 
     scope "/" do
@@ -83,6 +84,11 @@ defmodule TripPalsWeb.Router do
       post "/activities/:id/start", ActivityController, :start
       post "/activities/:id/finish", ActivityController, :finish
       post "/activities/:id/cancel", ActivityController, :cancel
+      post "/activities/:id/interest", ParticipationController, :interest
+      post "/activities/:id/join", ParticipationController, :join
+      post "/activities/:id/leave", ParticipationController, :leave
+      post "/activities/:id/reconfirm", ParticipationController, :reconfirm
+      post "/activities/:id/attendance", ParticipationController, :attendance
       delete "/auth/session", AuthController, :delete_session
       patch "/me", MeController, :update
       delete "/me/passkeys/:credential_id", MeController, :delete_passkey

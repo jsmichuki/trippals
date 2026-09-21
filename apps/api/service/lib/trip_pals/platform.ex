@@ -23,12 +23,29 @@ defmodule TripPals.Platform do
       expires_at: expires_at
     }
 
-    case Repo.insert(IdempotencyKey.claim_changeset(%IdempotencyKey{}, attributes)) do
-      {:ok, idempotency_key} ->
-        {:ok, :new, idempotency_key}
+    # `on_conflict: :nothing` avoids putting an enclosing domain transaction
+    # into PostgreSQL's aborted state. That matters because a Join must look up
+    # and replay an existing claim while retaining its activity-row lock.
+    case Repo.insert(IdempotencyKey.claim_changeset(%IdempotencyKey{}, attributes),
+           on_conflict: :nothing,
+           conflict_target: [:actor_id, :operation_scope, :key]
+         ) do
+      {:ok, attempted} ->
+        existing =
+          Repo.get_by!(IdempotencyKey,
+            actor_id: actor_id,
+            operation_scope: operation_scope,
+            key: key
+          )
+
+        if existing.id == attempted.id do
+          {:ok, :new, existing}
+        else
+          resolve_existing_claim(existing, request_hash)
+        end
 
       {:error, changeset} ->
-        resolve_claim_conflict(changeset, actor_id, operation_scope, key, request_hash)
+        {:error, changeset}
     end
   end
 
@@ -55,30 +72,12 @@ defmodule TripPals.Platform do
     |> Repo.all()
   end
 
-  defp resolve_claim_conflict(changeset, actor_id, operation_scope, key, request_hash) do
-    if unique_claim_conflict?(changeset) do
-      existing =
-        Repo.get_by!(IdempotencyKey,
-          actor_id: actor_id,
-          operation_scope: operation_scope,
-          key: key
-        )
-
-      case existing.request_hash do
-        ^request_hash when is_integer(existing.response_status) -> {:ok, :replay, existing}
-        ^request_hash -> {:ok, :in_progress, existing}
-        _ -> {:error, :idempotency_key_reused}
-      end
-    else
-      {:error, changeset}
+  defp resolve_existing_claim(existing, request_hash) do
+    case existing.request_hash do
+      ^request_hash when is_integer(existing.response_status) -> {:ok, :replay, existing}
+      ^request_hash -> {:ok, :in_progress, existing}
+      _ -> {:error, :idempotency_key_reused}
     end
-  end
-
-  defp unique_claim_conflict?(changeset) do
-    Enum.any?(changeset.errors, fn
-      {:actor_id, {_message, options}} -> options[:constraint] == :unique
-      _ -> false
-    end)
   end
 
   defp default_expiry, do: DateTime.add(DateTime.utc_now(), @idempotency_ttl_seconds, :second)
