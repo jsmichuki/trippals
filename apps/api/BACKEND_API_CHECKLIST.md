@@ -195,51 +195,51 @@ move it through truthful, auditable lifecycle states.
 
 ### Persistence and invariants
 
-- [ ] Add `activities`, `activity_host_assignments`, `activity_revisions`, and
+- [x] Add `activities`, `activity_host_assignments`, `activity_revisions`, and
   `activity_change_acknowledgements` schemas/migrations.
-- [ ] Store UTC `start_at`/`end_at`, city IANA timezone, public area, separately
+- [x] Store UTC `start_at`/`end_at`, city IANA timezone, public area, separately
   protected participant meeting detail, cost/currency/description, lifecycle
   state, confirmation deadline, host confirmation/start/conclusion timestamps,
   cancellation reason, and integer version.
-- [ ] Enforce `end_at > start_at`, `capacity_total BETWEEN 2 AND 10`, valid city
+- [x] Enforce `end_at > start_at`, `capacity_total BETWEEN 2 AND 10`, valid city
   timezone, and a host seat that is counted exactly once.
-- [ ] Model only permitted transitions: Draft → Published → Host Confirmed → In
+- [x] Model only permitted transitions: Draft → Published → Host Confirmed → In
   Progress → Completed Host Reported; explicit cancellation/expiry/outcome
   unknown/review transitions; terminal states are idempotent and audited.
-- [ ] Define material-change classification for date/time, city/venue, important
+- [x] Define material-change classification for date/time, city/venue, important
   price, capacity, and activity character; retain a versioned diff.
-- [ ] Create one host-owned conversation and corresponding outbox/audit records
+- [x] Create one host-owned conversation and corresponding outbox/audit records
   in the same transaction as successful publication.
 
 ### API
 
-- [ ] Implement `POST /v1/activities` for a draft created from scratch or from
+- [x] Implement `POST /v1/activities` for a draft created from scratch or from
   an idea template. An idea may prefill editable fields only.
-- [ ] Validate public venue/area, required logistics, local time/DST validity,
+- [x] Validate public venue/area, required logistics, local time/DST validity,
   cost including unavoidable fees, capacity, policy restrictions, and eligible
   host state before publication.
-- [ ] Implement `PATCH /v1/activities/:id` with ownership/policy authorization,
+- [x] Implement `PATCH /v1/activities/:id` with ownership/policy authorization,
   `If-Match`/version checks, material-change determination, revision/audit/outbox
   records, and the appropriate participant/invitation reconciliation.
-- [ ] Implement `POST /v1/activities/:id/publish`, `/confirm`, `/start`,
+- [x] Implement `POST /v1/activities/:id/publish`, `/confirm`, `/start`,
   `/finish`, and `/cancel`; require idempotency and state-guard checks.
-- [ ] Require a safe cancellation/conclusion reason and distinguish `Completed —
+- [x] Require a safe cancellation/conclusion reason and distinguish `Completed —
   host reported`, canceled/not held, and `Outcome unknown`; never infer a
   completed event from elapsed time.
-- [ ] Reject shrinking capacity below occupied seats; do not silently remove
+- [x] Reject shrinking capacity below occupied seats; do not silently remove
   members as a side effect of an edit.
-- [ ] Hide draft/pending-review/restricted/terminal activities from public
+- [x] Hide draft/pending-review/restricted/terminal activities from public
   discovery and prevent them from accepting joins or new invitations.
-- [ ] Publish public/member/host serializers that make host confirmation,
+- [x] Publish public/member/host serializers that make host confirmation,
   Going, interest, invitation, and attendance-related facts distinct.
 
 ### Verification
 
-- [ ] Test valid/invalid transition tables, host-only commands, idempotent
+- [x] Test valid/invalid transition tables, host-only commands, idempotent
   publish/cancel/finish, stale edits, review/cancel handling, and audit records.
-- [ ] Test private meeting details and roster fields never appear in guest,
+- [x] Test private meeting details and roster fields never appear in guest,
   shared-link, log, analytics, or notification response paths.
-- [ ] Test material edits propagate the same version/state to activity detail,
+- [x] Test material edits propagate the same version/state to activity detail,
   Plans, invitations, pinned chat data, and notifications.
 
 ## Deliverable 5 — Participation, capacity-safe Join/Leave, and My Plans

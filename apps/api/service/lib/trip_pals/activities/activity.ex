@@ -21,6 +21,13 @@ defmodule TripPals.Activities.Activity do
     field :going_count, :integer, default: 0
     field :status, :string, default: "draft"
     field :host_confirmed_at, :utc_datetime_usec
+    field :confirmation_deadline_at, :utc_datetime_usec
+    field :started_at, :utc_datetime_usec
+    field :concluded_at, :utc_datetime_usec
+    field :cancellation_reason, :string
+    field :outcome, :string
+    field :version, :integer, default: 1
+    field :published_at, :utc_datetime_usec
     belongs_to :city, TripPals.Cities.City
     belongs_to :idea, TripPals.Activities.ActivityIdea
     belongs_to :host, TripPals.Accounts.User
@@ -43,7 +50,14 @@ defmodule TripPals.Activities.Activity do
       :capacity_total,
       :going_count,
       :status,
-      :host_confirmed_at
+      :host_confirmed_at,
+      :confirmation_deadline_at,
+      :started_at,
+      :concluded_at,
+      :cancellation_reason,
+      :outcome,
+      :version,
+      :published_at
     ])
     |> validate_required([
       :title,
@@ -58,6 +72,8 @@ defmodule TripPals.Activities.Activity do
     ])
     |> validate_length(:title, min: 1, max: 160)
     |> validate_length(:category, min: 1, max: 80)
+    |> validate_noncommercial(:title)
+    |> validate_noncommercial(:description)
     |> validate_number(:capacity_total, greater_than_or_equal_to: 2, less_than_or_equal_to: 10)
     |> validate_number(:going_count, greater_than_or_equal_to: 0)
     |> validate_inclusion(:status, [
@@ -81,6 +97,8 @@ defmodule TripPals.Activities.Activity do
     |> check_constraint(:capacity_total, name: :activities_capacity_check)
     |> check_constraint(:going_count, name: :activities_going_count_check)
     |> check_constraint(:status, name: :activities_status_check)
+    |> check_constraint(:version, name: :activities_version_check)
+    |> check_constraint(:outcome, name: :activities_outcome_check)
   end
 
   defp validate_end_after_start(changeset) do
@@ -103,5 +121,15 @@ defmodule TripPals.Activities.Activity do
     else
       changeset
     end
+  end
+
+  defp validate_noncommercial(changeset, field) do
+    validate_change(changeset, field, fn ^field, value ->
+      if Regex.match?(~r{(?:https?://|www\.)}i, value) do
+        [{field, "must not include promotional links"}]
+      else
+        []
+      end
+    end)
   end
 end

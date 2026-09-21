@@ -77,12 +77,24 @@ defmodule TripPalsWeb.Router do
     scope "/" do
       pipe_through [:member, :state_changing]
 
+      post "/activities", ActivityController, :create
+      post "/activities/:id/publish", ActivityController, :publish
+      post "/activities/:id/confirm", ActivityController, :confirm
+      post "/activities/:id/start", ActivityController, :start
+      post "/activities/:id/finish", ActivityController, :finish
+      post "/activities/:id/cancel", ActivityController, :cancel
       delete "/auth/session", AuthController, :delete_session
       patch "/me", MeController, :update
       delete "/me/passkeys/:credential_id", MeController, :delete_passkey
       delete "/me/identities/:provider", IdentityController, :unlink
       post "/auth/passkeys/register/options", PasskeyController, :register_options
       post "/auth/passkeys/register/complete", PasskeyController, :register_complete
+    end
+
+    scope "/" do
+      pipe_through [:member, :state_changing, :activity_mutation]
+
+      patch "/activities/:id", ActivityController, :update
     end
 
     options "/*path", PreflightController, :show

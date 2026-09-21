@@ -56,6 +56,15 @@
           "404": {"description": "City not found", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}},
           "422": {"description": "Invalid range or unavailable city", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}}
         }
+      },
+      "post": {
+        "operationId": "createActivityDraft",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{"name": "Idempotency-Key", "in": "header", "required": true, "schema": {"type": "string"}}],
+        "responses": {
+          "201": {"description": "Host-owned activity draft", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Success"}}}},
+          "403": {"description": "Ineligible host", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}}
+        }
       }
     },
     "/v1/activities/{id}": {
@@ -67,6 +76,19 @@
           "404": {"description": "Activity not found", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}},
           "410": {"description": "Activity is no longer publicly available", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}}
         }
+      },
+      "patch": {
+        "operationId": "updateActivity",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string", "format": "uuid"}},
+          {"name": "Idempotency-Key", "in": "header", "required": true, "schema": {"type": "string"}},
+          {"name": "If-Match", "in": "header", "required": true, "schema": {"type": "integer"}}
+        ],
+        "responses": {
+          "200": {"description": "Updated host activity", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Success"}}}},
+          "409": {"description": "Stale activity version", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}}
+        }
       }
     },
     "/v1/activity-ideas": {
@@ -76,9 +98,17 @@
           "200": {"description": "Non-joinable activity templates", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Success"}}}}
         }
       }
-    }
+    },
+    "/v1/activities/{id}/publish": {"post": {"operationId": "publishActivity", "security": [{"bearerAuth": []}], "responses": {"200": {"description": "Published activity", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Success"}}}}}}},
+    "/v1/activities/{id}/confirm": {"post": {"operationId": "confirmActivity", "security": [{"bearerAuth": []}], "responses": {"200": {"description": "Host-confirmed activity", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Success"}}}}}}},
+    "/v1/activities/{id}/start": {"post": {"operationId": "startActivity", "security": [{"bearerAuth": []}], "responses": {"200": {"description": "In-progress activity", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Success"}}}}}}},
+    "/v1/activities/{id}/finish": {"post": {"operationId": "finishActivity", "security": [{"bearerAuth": []}], "responses": {"200": {"description": "Host-reported outcome", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Success"}}}}}}},
+    "/v1/activities/{id}/cancel": {"post": {"operationId": "cancelActivity", "security": [{"bearerAuth": []}], "responses": {"200": {"description": "Canceled activity", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Success"}}}}}}}
   },
   "components": {
+    "securitySchemes": {
+      "bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "TripPals access token"}
+    },
     "schemas": {
       "Success": {
         "type": "object",
